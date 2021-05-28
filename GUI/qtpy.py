@@ -195,7 +195,7 @@ def show_frame_espera():
         n+=1
         if salida == True:
             break
-    start_program()
+    frame_retirar()
 
 
 def show_frame_listar():
@@ -231,6 +231,69 @@ def frame_listar():
     widgets["button"].append(button)
     grid.addWidget(widgets["button"][-1], 2, 1)
     
+
+def frame_espera3():
+    #accion es un booleano que especifica si va a esperar o no
+    image = QPixmap("img/3.png")
+    logo = QLabel()
+    logo.setPixmap(image)
+    logo.setAlignment(QtCore.Qt.AlignCenter)
+    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    
+    mensaje = crear_mensaje("Mecabot está ocupado, por favor espere.")
+    
+    widgets["logo"].append(logo)
+    grid.addWidget(widgets["logo"][-1], 0, 0)
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 1, 0)
+
+def frame_espera4():
+    #accion es un booleano que especifica si va a esperar o no
+    image = QPixmap("img/4.png")
+    logo = QLabel()
+    logo.setPixmap(image)
+    logo.setAlignment(QtCore.Qt.AlignCenter)
+    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    
+    mensaje = crear_mensaje("Mecabot está ocupado, por favor espere.")
+    
+    widgets["logo"].append(logo)
+    grid.addWidget(widgets["logo"][-1], 0, 0)
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 1, 0)    
+
+def show_frame_espera_2():
+    global salida
+    n=0
+    while(True):
+        clear_widgets()
+        frame_espera3()
+        QtTest.QTest.qWait(500)
+        clear_widgets()
+        frame_espera4()
+        QtTest.QTest.qWait(500)
+        salida = n>4
+        n+=1
+        if salida == True:
+            break
+    start_program()
+    
+    
+def frame_retirar():
+    image = QPixmap("img/fin.png")
+    logo = QLabel()
+    logo.setPixmap(image)
+    logo.setAlignment(QtCore.Qt.AlignCenter)
+    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    
+    mensaje = crear_mensaje("Por favor retire su medicamento.")
+    
+    widgets["logo"].append(logo)
+    grid.addWidget(widgets["logo"][-1], 0, 0)
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 1, 0)
+    QtTest.QTest.qWait(4000)
+    start_program()
 
 def start_program():
     clear_widgets()
