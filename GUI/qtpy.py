@@ -6,7 +6,19 @@ import numpy as np
 from pyzbar import pyzbar
 from data import *
 
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QMessageBox
+from PyQt5.QtWidgets import (
+                            QApplication, 
+                            QLabel, 
+                            QPushButton, 
+                            QVBoxLayout, 
+                            QWidget, 
+                            QFileDialog, 
+                            QGridLayout, 
+                            QMessageBox, 
+                            QListWidget,
+                            QListWidgetItem,
+                            )
+
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtGui import QCursor
@@ -17,7 +29,9 @@ from PyQt5 import QtTest
 widgets = {
         "logo": [],
         "button": [],
-        "qrshow":[]
+        "qrshow":[],
+        "message":[],
+        "lists":[]
     }
 
 salida = False
@@ -33,6 +47,16 @@ window.setStyleSheet("background: #91BEF7;")
 grid = QGridLayout()
 
 
+def crear_mensaje(msj):
+    mensaje = QLabel(msj)
+    mensaje.setAlignment(QtCore.Qt.AlignCenter)
+    mensaje.setStyleSheet(
+        '''
+        font-size: 25px;
+        font-style: Bold;
+        '''
+    )
+    return mensaje
 
 
 def clear_widgets():
@@ -65,6 +89,20 @@ def createButton(words):
     return button
 
 
+def alerta(medicamento):
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+
+    msg.setText("¿Usted está seguro que desea este medicamento?")
+    msg.setInformativeText("Cuando presione 'Ok' se procederá a traerle el medicamento "+ str(medicamento))
+    msg.setWindowTitle("¿Está seguro?")
+    msg.setDetailedText("")
+    msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+    retval = msg.exec_()
+    return retval
+
+
 def frame_QR():
     url = "http://192.168.100.3:8080/shot.jpg"
     while True:
@@ -85,7 +123,9 @@ def frame_QR():
         grid.addWidget(widgets["qrshow"][-1], 1, 0)
         QtTest.QTest.qWait(50)
         if qr != []:
-            break
+            if alerta("Zmol")==1024:
+                break
+            else: continue
     show_frame_espera()
 
 
@@ -102,6 +142,7 @@ def frame1():
     button1 = createButton("Escanear código QR")
     button2 = createButton("Listar los medicamentos disponibles")
     button1.clicked.connect(frame_QR)
+    button2.clicked.connect(show_frame_listar)
     
     widgets["button"].append(button1)
 
@@ -117,8 +158,13 @@ def frame_espera1():
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
     logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    
+    mensaje = crear_mensaje("El robot está trayendo su pedido.")
+    
     widgets["logo"].append(logo)
     grid.addWidget(widgets["logo"][-1], 0, 0)
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 1, 0)
 
 def frame_espera2():
     #accion es un booleano que especifica si va a esperar o no
@@ -127,9 +173,13 @@ def frame_espera2():
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
     logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    
+    mensaje = crear_mensaje("El robot está trayendo su pedido.")
+    
     widgets["logo"].append(logo)
     grid.addWidget(widgets["logo"][-1], 0, 0)
-        
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 1, 0)    
 
 def show_frame_espera():
     global salida
@@ -148,13 +198,44 @@ def show_frame_espera():
     start_program()
 
 
+def show_frame_listar():
+    clear_widgets()
+    frame_listar()
+
+
 def frame_listar():
-    pass
+    
+    global lista_medicamentos
+    
+    mensaje = crear_mensaje("Aquí se muestran todos los medicamentos disponibles")
+    
+    lista = QListWidget()
+    [lista.addItem(QListWidgetItem(str(medicamento))) for medicamento in lista_medicamentos]
+    lista.setStyleSheet(
+        '''
+        font-size: 16px;
+        padding: 25px;
+        border: 2px solid #008CBA;
+        border-radius: 10px;
+        '''
+    )
+    
+    button = createButton("Volver")
+    button.clicked.connect(start_program)
+    
+    
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 0, 1)
+    widgets["lists"].append(lista)
+    grid.addWidget(widgets["lists"][-1], 1, 1)
+    widgets["button"].append(button)
+    grid.addWidget(widgets["button"][-1], 2, 1)
+    
 
 def start_program():
     clear_widgets()
     frame1()
-    
+
 
 start_program()
 
