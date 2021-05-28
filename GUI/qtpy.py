@@ -4,15 +4,15 @@ import urllib.request
 import cv2
 import numpy as np
 from pyzbar import pyzbar
+from data import *
 
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QMessageBox
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtGui import QCursor
 from PyQt5 import QtTest
 
-
-
+#lista_medicamentos: la lista de todos los medicamentos disponibles
 
 widgets = {
         "logo": [],
@@ -33,6 +33,8 @@ window.setStyleSheet("background: #91BEF7;")
 grid = QGridLayout()
 
 
+
+
 def clear_widgets():
     for widget in widgets:
         for i in range(0, len(widgets[widget])):
@@ -50,7 +52,6 @@ def createButton(words):
         border: 2px solid #008CBA; /* Blue */
         color: black;
         padding: 25px 0px;
-        font-style: Ubuntu;
         text-align: center;
         text-decoration: none;
         font-size: 16px;}
@@ -84,7 +85,8 @@ def frame_QR():
         grid.addWidget(widgets["qrshow"][-1], 1, 0)
         QtTest.QTest.qWait(50)
         if qr != []:
-            show_frame_espera()
+            break
+    show_frame_espera()
 
 
 def frame1():
@@ -142,7 +144,12 @@ def show_frame_espera():
         salida = n>4
         n+=1
         if salida == True:
-            start_program()
+            break
+    start_program()
+
+
+def frame_listar():
+    pass
 
 def start_program():
     clear_widgets()
@@ -154,4 +161,4 @@ start_program()
 window.setLayout(grid)
 
 window.show()
-sys.exit(app.exec())
+app.exec()
