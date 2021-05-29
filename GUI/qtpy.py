@@ -24,7 +24,22 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtGui import QCursor
 from PyQt5 import QtTest
 
+import serial
+# Para usar la biblioteca serial se debe utilizar el sudo python
+# Desde Ubuntu con miniconda3 se debe hacer de la siguiente forma:
+
+# sudo ~/miniconda3/envs/"ENVIRONMENT NAME"/bin/python3 qtpy.py
+
+# Dirección del ARDUINO
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+
+# URL DE LA PRIMERA CAMARA
+url = "http://192.168.100.3:8080/shot.jpg"
+
 #lista_medicamentos: la lista de todos los medicamentos disponibles
+
+ocupado = False
+bandera = False
 
 widgets = {
         "logo": [],
@@ -35,7 +50,6 @@ widgets = {
     }
 
 salida = False
-
 
 app = QApplication(sys.argv)
 window = QWidget()
@@ -104,7 +118,8 @@ def alerta(medicamento):
 
 
 def frame_QR():
-    url = "http://192.168.100.3:8080/shot.jpg"
+    global url,bandera
+    bandera = True
     while True:
         clear_widgets()
         imgResp = urllib.request.urlopen(url)
@@ -130,6 +145,9 @@ def frame_QR():
 
 
 def frame1():
+    global ocupado, arduino, bandera
+    bandera = False
+    clear_widgets()
     #display Logo
     image = QPixmap("img/logo.png")
     logo = QLabel()
@@ -150,6 +168,17 @@ def frame1():
     grid.addWidget(widgets["button"][-1], 1, 0)
     widgets["button"].append(button2)
     grid.addWidget(widgets["button"][-1], 2, 0)
+    while True:
+        data = arduino.readline().decode()
+        
+        if bandera:
+            break
+        print(data)
+        if data == "ocupado\n":
+            break
+        QtTest.QTest.qWait(500)
+    if data == "ocupado\n":
+        show_frame_espera_2()
     
 def frame_espera1():
     #accion es un booleano que especifica si va a esperar o no
@@ -205,7 +234,8 @@ def show_frame_listar():
 
 def frame_listar():
     
-    global lista_medicamentos
+    global lista_medicamentos, bandera
+    bandera = True
     
     mensaje = crear_mensaje("Aquí se muestran todos los medicamentos disponibles")
     
@@ -263,18 +293,22 @@ def frame_espera4():
     grid.addWidget(widgets["message"][-1], 1, 0)    
 
 def show_frame_espera_2():
-    global salida
+    global salida, arduino
     n=0
     while(True):
         clear_widgets()
         frame_espera3()
         QtTest.QTest.qWait(500)
         clear_widgets()
+        data = arduino.readline().decode()
         frame_espera4()
         QtTest.QTest.qWait(500)
         salida = n>4
         n+=1
-        if salida == True:
+        
+        data = arduino.readline().decode()
+        print(data)
+        if data == "desocupado\n":
             break
     start_program()
     
@@ -300,9 +334,29 @@ def start_program():
     frame1()
 
 
-start_program()
+def frame_base():
+    #display Logo
+    image = QPixmap("img/logo.png")
+    logo = QLabel()
+    logo.setPixmap(image)
+    logo.setAlignment(QtCore.Qt.AlignCenter)
+    logo.setStyleSheet("margin-top:50px; margin-bottom:80px")
+    widgets["logo"].append(logo)
+    
+    #button widget
+    button1 = createButton("Iniciar Mecabot")
+    button1.clicked.connect(start_program)
+    
+    widgets["button"].append(button1)
+
+    grid.addWidget(widgets["logo"][-1], 0, 0)
+    grid.addWidget(widgets["button"][-1], 1, 0)
+    
+    
+frame_base()
 
 window.setLayout(grid)
 
 window.show()
+
 app.exec()
