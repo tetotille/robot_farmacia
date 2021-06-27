@@ -31,10 +31,10 @@ import serial
 # sudo ~/miniconda3/envs/"ENVIRONMENT NAME"/bin/python3 qtpy.py
 
 # Dirección del ARDUINO
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA
-url = "http://192.168.100.3:8080/shot.jpg"
+url = "http://192.168.100.62:8080/shot.jpg"
 
 #lista_medicamentos: la lista de todos los medicamentos disponibles
 
@@ -108,7 +108,7 @@ def alerta(medicamento):
     msg.setIcon(QMessageBox.Information)
 
     msg.setText("¿Usted está seguro que desea este medicamento?")
-    msg.setInformativeText("Cuando presione 'Ok' se procederá a traerle el medicamento "+ str(medicamento))
+    msg.setInformativeText("Cuando presione 'Ok' se procederá a traerle "+ str(medicamento))
     msg.setWindowTitle("¿Está seguro?")
     msg.setDetailedText("")
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -127,6 +127,8 @@ def frame_QR():
         img = cv2.imdecode(imgNp, -1)
         qr = getQRS(img)
         print(qr)
+        # Se supone que hay un solo qr en la imagen
+        first_qr = qr[0] if qr else {}
         small = cv2.resize(img, (0,0), fx=0.3, fy=0.3) 
         smallqt = convert_cv_qt(window,small)
         
@@ -138,7 +140,7 @@ def frame_QR():
         grid.addWidget(widgets["qrshow"][-1], 1, 0)
         QtTest.QTest.qWait(50)
         if qr != []:
-            if alerta("Zmol")==1024:
+            if alerta(first_qr['text'])==1024:
                 break
             else: continue
     show_frame_espera()
