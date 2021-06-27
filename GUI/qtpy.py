@@ -33,8 +33,11 @@ import serial
 # Dirección del ARDUINO
 arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 
-# URL DE LA PRIMERA CAMARA
+# URL DE LA PRIMERA CAMARA: camara de pedidos
 url = "http://192.168.100.62:8080/shot.jpg"
+
+# URL DE LA SEGUNDA CAMARA: camara de reposición
+url_repo = "http://192.168.100.3:8080/shot.jpg"
 
 #lista_medicamentos: la lista de todos los medicamentos disponibles
 
@@ -118,9 +121,22 @@ def alerta(medicamento):
 
 
 def frame_QR():
-    global url,bandera
+    """
+        Muestra la cámara en la pantalla principal para que la persona pueda poner
+        el código QR donde corresponde y luego cuando detecta el código le aparece
+        un mensaje emergente que debe de aceptar para que se busque el medicamento
+        indicado.
+        
+        Puede ser llamado a través del frame1 (pantalla principal) y luego va al
+        frame de espera.
+        
+        Al detectar el medicamento envía un mensaje al arduino con la ubicación del
+        medicamento que se tomará.
+    """
+    global url,bandera,arduino,lista_medicamentos
     bandera = True
     while True:
+        # Se hace la detección del código QR y se guarda en qr
         clear_widgets()
         imgResp = urllib.request.urlopen(url)
         imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
@@ -129,9 +145,11 @@ def frame_QR():
         print(qr)
         # Se supone que hay un solo qr en la imagen
         first_qr = qr[0] if qr else {}
+        
         small = cv2.resize(img, (0,0), fx=0.3, fy=0.3) 
         smallqt = convert_cv_qt(window,small)
         
+        # Muestra cada pantallazo
         qrshow = QLabel()
         qrshow.setPixmap(smallqt)
         qrshow.setAlignment(QtCore.Qt.AlignCenter)
@@ -139,8 +157,14 @@ def frame_QR():
         widgets["qrshow"].append(qrshow)
         grid.addWidget(widgets["qrshow"][-1], 1, 0)
         QtTest.QTest.qWait(50)
+        
+        # Condición de medicamento detectado, se guarda el medicamento que se encontró en el QR
         if qr != []:
             if alerta(first_qr['text'])==1024:
+                # una vez que se encuentra el medicamento se debe de decir el lugar donde está
+                # y mandar eso al arduino
+                medicamento_detectado = buscar_medicamento(first_qr['text'])+"\n"
+                arduino.write(encode(medicamento_detectado, 'UTF-8'))
                 break
             else: continue
     show_frame_espera()
@@ -213,19 +237,36 @@ def frame_espera2():
     grid.addWidget(widgets["message"][-1], 1, 0)    
 
 def show_frame_espera():
+    """
+        Este frame se encarga de mostrar la animación de espera
+        mientras el robot trae el medicamento.
+        
+        Mientras que muestra los frames espera la palabra clave
+        del arduino a través de UART, lo decodifica y lo compara
+        y cuando al fin lo recibe muestra el frame de retirar
+        medicamento.
+    """
     global salida
     n=0
     while(True):
         clear_widgets()
         frame_espera1()
+        
+        # Condición de salida - Comunicación con Arduino
+        salida = arduino.readline().decode() == "retirar\n"
+        if salida == True:
+            break
+        
         QtTest.QTest.qWait(500)
         clear_widgets()
         frame_espera2()
-        QtTest.QTest.qWait(500)
-        salida = n>4
-        n+=1
+        
+        # Condición de salida - Comunicación con Arduino
+        salida = arduino.readline().decode() == "retirar\n"
         if salida == True:
             break
+        
+        QtTest.QTest.qWait(500)
     frame_retirar()
 
 
@@ -316,6 +357,11 @@ def show_frame_espera_2():
     
     
 def frame_retirar():
+    """
+        Imprime un mensaje en pantalla para retirar el medicamento una vez que
+        llega a la caja de donde se puede agarrar, el mensaje dura 4 segundos
+        y luego vuelve a la pantalla principal.
+    """
     image = QPixmap("img/fin.png")
     logo = QLabel()
     logo.setPixmap(image)

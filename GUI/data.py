@@ -10,6 +10,9 @@ class Medicamento():
 
     def __str__(self):
         return self.nombre
+    
+    def ver_lugar(self):
+        return "("+str(self.fila)+","+str(self.columna)+")"
 
 
 def inicializar_lista(lista_medicamentos):
@@ -33,5 +36,12 @@ def actualizar_lista(lista_medicamentos):
         writer += str(medicamento) + " (" + str(medicamento.fila) + "," + str(medicamento.columna) + ")\n"
     f.write(writer)
     f.close()
+    
+def buscar_medicamento(nombre):
+    lugar = None
+    for medicamento in lista_medicamentos:
+        lugar = medicamento.ver_lugar() if str(medicamento)==nombre else lugar
+    return lugar
+
 
 inicializar_lista(lista_medicamentos)
