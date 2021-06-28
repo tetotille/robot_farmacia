@@ -34,7 +34,7 @@ import serial
 arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA: camara de pedidos
-url = "http://192.168.100.62:8080/shot.jpg"
+url = "http://192.168.100.43:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
 url_repo = "http://192.168.100.3:8080/shot.jpg"
@@ -194,6 +194,8 @@ def frame1():
     grid.addWidget(widgets["button"][-1], 1, 0)
     widgets["button"].append(button2)
     grid.addWidget(widgets["button"][-1], 2, 0)
+    
+    # Verifica si se apretó el botón
     while True:
         data = arduino.readline().decode()
         
@@ -341,11 +343,11 @@ def show_frame_espera_2():
     while(True):
         clear_widgets()
         frame_espera3()
-        QtTest.QTest.qWait(500)
+        QtTest.QTest.qWait(100)
         clear_widgets()
         data = arduino.readline().decode()
         frame_espera4()
-        QtTest.QTest.qWait(500)
+        QtTest.QTest.qWait(100)
         salida = n>4
         n+=1
         
