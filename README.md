@@ -16,6 +16,7 @@ Necesitará tener instalado pyQt5 que se instala de la siguiente manera
 
 ```
 sudo apt-get install python3-pyqt5
+sudo apt-get install zbar-tools
 ```
 
 También necesitará la instalación de lo especificado en requirements.txt
