@@ -1,5 +1,5 @@
 import sys
-from QR_reader import *
+from src.Vision.QR_reader import *
 import urllib.request
 import cv2
 import numpy as np
@@ -29,6 +29,8 @@ import serial
 # Desde Ubuntu con miniconda3 se debe hacer de la siguiente forma:
 
 # sudo ~/miniconda3/envs/"ENVIRONMENT NAME"/bin/python3 qtpy.py
+
+root_path = "./src/GUI"
 
 # Dirección del ARDUINO
 arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
@@ -175,7 +177,7 @@ def frame1():
     bandera = False
     clear_widgets()
     #display Logo
-    image = QPixmap("img/logo.png")
+    image = QPixmap(f"{root_path}/img/logo.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
@@ -210,7 +212,7 @@ def frame1():
     
 def frame_espera1():
     #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap("img/1.png")
+    image = QPixmap(f"{root_path}/img/1.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
@@ -225,7 +227,7 @@ def frame_espera1():
 
 def frame_espera2():
     #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap("img/2.png")
+    image = QPixmap(f"{root_path}/img/2.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
@@ -309,7 +311,7 @@ def frame_listar():
 
 def frame_espera3():
     #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap("img/3.png")
+    image = QPixmap(f"{root_path}/img/3.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
@@ -324,7 +326,7 @@ def frame_espera3():
 
 def frame_espera4():
     #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap("img/4.png")
+    image = QPixmap(f"{root_path}/img/4.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
@@ -364,7 +366,7 @@ def frame_retirar():
         llega a la caja de donde se puede agarrar, el mensaje dura 4 segundos
         y luego vuelve a la pantalla principal.
     """
-    image = QPixmap("img/fin.png")
+    image = QPixmap(f"{root_path}/img/fin.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
@@ -386,7 +388,7 @@ def start_program():
 
 def frame_base():
     #display Logo
-    image = QPixmap("img/logo.png")
+    image = QPixmap(f"{root_path}/img/logo.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)

@@ -3,3 +3,4 @@ pyzbar
 numpy
 PyQt5
 pyserial
+-e .

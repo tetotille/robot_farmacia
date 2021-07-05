@@ -1,5 +1,4 @@
-
-
+root_path = './src/GUI'
 lista_medicamentos = []
 
 class Medicamento():
@@ -16,7 +15,7 @@ class Medicamento():
 
 
 def inicializar_lista(lista_medicamentos):
-    f = open("data.txt", "r")
+    f = open(f"{root_path}/data.txt", "r")
 
     datos = f.read().split("\n")
     for dato in datos:
@@ -29,7 +28,7 @@ def inicializar_lista(lista_medicamentos):
     f.close()
 
 def actualizar_lista(lista_medicamentos):
-    f = open("data.txt", "w")
+    f = open(f"{root_path}/data.txt", "w")
     
     writer = ""
     for medicamento in lista_medicamentos:
