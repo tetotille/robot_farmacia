@@ -1,4 +1,4 @@
-root_path = './src/GUI'
+root_path = '.'
 lista_medicamentos = []
 
 class Medicamento():
