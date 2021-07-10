@@ -1,3 +1,5 @@
+#include <ctime>
+
 String x;
 int pushButton = 53;
 int estado = 0;
@@ -6,6 +8,8 @@ int marcaEstado = 0;
 int LED_rojo = 52;
 int LED_verde = 51;
 
+int cinta = 50;
+char uart_python[10];
 
 char posicion[10];
 int fila, columna;
@@ -52,6 +56,7 @@ void setup() {
     pinMode(pushButton, INPUT);
     pinMode(LED_rojo, OUTPUT);
     pinMode(LED_verde, OUTPUT);
+    pinMode(cinta, OUTPUT);
 }
 
 
@@ -162,22 +167,57 @@ void loop() {
     // Reposición de medicamentos
     // 1. Primero se verifica si se presionó el botón
     if (digitalRead(pushButton) == HIGH){
-        if (marcaEstado == 0) {
-            estado == 0;
+        digitalWrite(LED_rojo, HIGH);
+        digitalWrite(LED_verde, LOW);
+        
+        // 2. Se empieza a mover la cinta y se verifica si llegó al punto de escaneo
+        // El mensaje de escaneo es "escaneo"
+        int bandera_scan = 0;
+        time_t init_time;
+        time_t current_time;
+        while(true){
+            uart_python = Serial.read();
+            digitalWrite(cinta, HIGH);
+            delay(15);
+            if (uart_python == "escaneo"){
+                bandera_scan = 1;
+                init_time = time(NULL);
+                posicion = Serial.read();
+            }
+            // Se hace más lenta la cinta al principio y dp de escanear a toda puta
+            if (bandera_scan == 0){
+                digitalWrite(cinta,LOW);
+                delay(15);
+            }
+            
+            // Se espera 5 segundos para que llegue el remedio en su lugar
+            current_time = time(NULL) - init_time;
+            if (current_time < 100 && current_time > 4){
+                break;
+            }
+
         }
-        marcaEstado = 1;
-        estado++;
-    }
-
-    if (estado >= 10 or digitalRead(pushButton) == LOW) {
-        marcaEstado = 0;
-    }
-
-    if (marcaEstado){
-        Serial.print("ocupado\n");
-        delay(500);
-        }else{
-            Serial.print("desocupado\n");
-            delay(500);
+        
+        // 3. El robot lleva el medicamento donde debe ser
+        fila = (int) posicion[1];
+        columna = (int) posicion[3];
+        posicion_final = lista_posiciones[4*fila+columna][:];
+        while (posi_y < posicion_final[1]){
+                motor_y = 255;
+        }
+        motor_y = 0;
+        
+        //motor_x se mueve segundo
+        while (posi_x < posicion_final[0]){
+                motor_x = 255;
+        }
+        motor_x = 0;
+        
+        //motor_z se mueve tercero
+        while (posi_z < posicion_final[2]){
+                motor_z = 255;
+        }
+        motor_z = 0;
+        
     }
 }
