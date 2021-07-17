@@ -3,4 +3,5 @@ pyzbar
 numpy
 PyQt5
 pyserial
+pandas
 -e .

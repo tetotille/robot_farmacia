@@ -2,6 +2,19 @@ root_path = '.'
 lista_medicamentos = []
 
 class Medicamento():
+    '''
+    Clase Medicamento
+
+    Atributos
+    -------------
+    nombre   : nombre del medicamento
+    fila     : 0<=fila<=3, fila en el rack
+    columna  : 0<=columna<=3, columna en el rack
+
+    Métodos
+    -------------
+    ver_lugar: imprime en la consola la posición del medicamento
+    '''
     def __init__(self, nombre, fila, columna):
         self.nombre = nombre
         self.fila = fila

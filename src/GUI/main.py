@@ -39,7 +39,7 @@ arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 url = "http://192.168.100.43:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
-url_repo = "http://192.168.100.3:8080/shot.jpg"
+url_repo = "http://192.168.400.3:8080/shot.jpg"
 
 #lista_medicamentos: la lista de todos los medicamentos disponibles
 
@@ -130,7 +130,7 @@ def frame_QR():
         indicado.
         
         Puede ser llamado a través del frame1 (pantalla principal) y luego va al
-        frame de espera.
+        frame de espera o al frame principal con el botón volver.
         
         Al detectar el medicamento envía un mensaje al arduino con la ubicación del
         medicamento que se tomará.
@@ -158,8 +158,11 @@ def frame_QR():
         qrshow.setStyleSheet("margin-top:50px; margin-bottom:50px")
         widgets["qrshow"].append(qrshow)
         grid.addWidget(widgets["qrshow"][-1], 1, 0)
+        button1 = createButton("Volver")
+        button1.clicked.connect(frame1)
         QtTest.QTest.qWait(50)
         
+        # Comunicación con ARDUINO
         # Condición de medicamento detectado, se guarda el medicamento que se encontró en el QR
         if qr != []:
             if alerta(first_qr['text'])==1024:
@@ -173,6 +176,16 @@ def frame_QR():
 
 
 def frame1():
+    """
+    Frame de pantalla principal
+
+    Aparece el logo y dos botones:
+        --------------
+        |   MECABOT  |
+        --------------
+        -Escanear código QR
+        -Listar los medicamentos disponibles
+    """
     global ocupado, arduino, bandera
     bandera = False
     clear_widgets()
@@ -197,7 +210,7 @@ def frame1():
     widgets["button"].append(button2)
     grid.addWidget(widgets["button"][-1], 2, 0)
     
-    # Verifica si se apretó el botón
+    # Verifica si se apretó el botón de reposición - Comunicación con ARDUINO
     while True:
         data = arduino.readline().decode()
         
@@ -256,7 +269,7 @@ def show_frame_espera():
         clear_widgets()
         frame_espera1()
         
-        # Condición de salida - Comunicación con Arduino
+        # Condición de salida - Comunicación con ARDUINO
         salida = arduino.readline().decode() == "retirar\n"
         if salida == True:
             break
@@ -265,7 +278,7 @@ def show_frame_espera():
         clear_widgets()
         frame_espera2()
         
-        # Condición de salida - Comunicación con Arduino
+        # Condición de salida - Comunicación con ARDUINO
         salida = arduino.readline().decode() == "retirar\n"
         if salida == True:
             break
@@ -352,9 +365,11 @@ def show_frame_espera_2():
         QtTest.QTest.qWait(100)
         salida = n>4
         n+=1
-        
+
+        # Comunicación con ARDUINO
         data = arduino.readline().decode()
         print(data)
+        # Condición de salir del frame de espera
         if data == "desocupado\n":
             break
     start_program()
@@ -373,6 +388,27 @@ def frame_retirar():
     logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
     
     mensaje = crear_mensaje("Por favor retire su medicamento.")
+    
+    widgets["logo"].append(logo)
+    grid.addWidget(widgets["logo"][-1], 0, 0)
+    widgets["message"].append(mensaje)
+    grid.addWidget(widgets["message"][-1], 1, 0)
+    QtTest.QTest.qWait(4000)
+    start_program()
+
+
+def frame_sin_medicamento():
+    """
+        Imprime un mensaje en pantalla que no se encuentra el medicamento,
+        el mensaje dura 4 segundos y luego vuelve a la pantalla principal.
+    """
+    image = QPixmap(f"{root_path}/img/not_found.png")
+    logo = QLabel()
+    logo.setPixmap(image)
+    logo.setAlignment(QtCore.Qt.AlignCenter)
+    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    
+    mensaje = crear_mensaje("Medicamento fuera de stock.")
     
     widgets["logo"].append(logo)
     grid.addWidget(widgets["logo"][-1], 0, 0)
