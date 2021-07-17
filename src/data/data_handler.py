@@ -3,20 +3,6 @@ import random
 
 root_path = "./src/data"
 
-def check_availability(pos):
-    """
-    Verificar que una cierta gaveta esté libre
-
-    Entrada
-    -------------
-    pos:    tupla (i,j) de posición en el estante
-
-    Salida
-    -------------
-    True si la gaveta está libre. Caso contrario, False.
-    """
-    return True
-
 def save_box(ID):
     """
     Asigna una posición en el rack para el guardado
