@@ -13,7 +13,7 @@ def save_box(ID):
 
     Salida
     -------------
-    Tupla que corresponde a la posición en la que se
+    Número que corresponde a la posición en la que se
     guarda el medicamento. None si no hay lugares
     libres o no se encuentra registrado el medicamento.
     """
@@ -33,7 +33,8 @@ def save_box(ID):
                                          index = ["pos_x", "pos_y"],
                                          data = choice))
         rack.to_csv(f"{root_path}/rack.csv")
-        return choice
+        return str(choice[0]*4+choice[1])
+
     except IndexError:
         print(f"No hay espacio para guardar el medicamento de ID {ID}.")
         return None
@@ -48,7 +49,7 @@ def search_box(ID):
 
     Salida
     -------------
-    Tupla que corresponde a la posición en la que se
+    Número que corresponde a la posición en la que se
     encuentra el medicamento. None si no se encuentra
     el medicamento o el mismo no existe.
     """
@@ -60,7 +61,7 @@ def search_box(ID):
     try:
         x,y = rack.loc[ID].iloc[0].tolist()
         rack[(rack.pos_x != x) | (rack.pos_y != y)]
-        return (x,y)
+        return str(x*4+y)
     except KeyError:
         print(f"El medicamento de ID {ID} no está en el rack.")
         return None

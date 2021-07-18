@@ -1,10 +1,12 @@
 import sys
 from src.Vision.QR_reader import *
+from src.data import data_handler
 import urllib.request
 import cv2
 import numpy as np
 from pyzbar import pyzbar
 from data import *
+
 
 from PyQt5.QtWidgets import (
                             QApplication, 
@@ -134,6 +136,8 @@ def frame_QR():
         
         Al detectar el medicamento envía un mensaje al arduino con la ubicación del
         medicamento que se tomará.
+
+        El QR tiene como formato: ID:medicamento:cantidad
     """
     global url,bandera,arduino,lista_medicamentos
     bandera = True
@@ -147,6 +151,7 @@ def frame_QR():
         print(qr)
         # Se supone que hay un solo qr en la imagen
         first_qr = qr[0] if qr else {}
+        
         
         small = cv2.resize(img, (0,0), fx=0.3, fy=0.3) 
         smallqt = convert_cv_qt(window,small)
@@ -163,13 +168,19 @@ def frame_QR():
         QtTest.QTest.qWait(50)
         
         # Comunicación con ARDUINO
-        # Condición de medicamento detectado, se guarda el medicamento que se encontró en el QR
+        # Condición de medicamento detectado, se retira el medicamento que se encontró en el QR
         if qr != []:
             if alerta(first_qr['text'])==1024:
                 # una vez que se encuentra el medicamento se debe de decir el lugar donde está
                 # y mandar eso al arduino
-                medicamento_detectado = buscar_medicamento(first_qr['text'])+"\n"
-                arduino.write(encode(medicamento_detectado, 'UTF-8'))
+                ID = first_qr.split(":")[0]
+                # buscar_medicamento le tiene que dar la posición del rack por ahí que estaría
+                # enumerado del 0 al 15
+                medicamento_detectado = data_handler.search_box(ID) # ATENCION si es None
+                if medicamento_detectado is not None:
+                    frame_sin_medicamento()
+                    next
+                arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
                 break
             else: continue
     show_frame_espera()
@@ -222,36 +233,6 @@ def frame1():
         QtTest.QTest.qWait(500)
     if data == "ocupado\n":
         show_frame_espera_2()
-    
-def frame_espera1():
-    #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap(f"{root_path}/img/1.png")
-    logo = QLabel()
-    logo.setPixmap(image)
-    logo.setAlignment(QtCore.Qt.AlignCenter)
-    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
-    
-    mensaje = crear_mensaje("El robot está trayendo su pedido.")
-    
-    widgets["logo"].append(logo)
-    grid.addWidget(widgets["logo"][-1], 0, 0)
-    widgets["message"].append(mensaje)
-    grid.addWidget(widgets["message"][-1], 1, 0)
-
-def frame_espera2():
-    #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap(f"{root_path}/img/2.png")
-    logo = QLabel()
-    logo.setPixmap(image)
-    logo.setAlignment(QtCore.Qt.AlignCenter)
-    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
-    
-    mensaje = crear_mensaje("El robot está trayendo su pedido.")
-    
-    widgets["logo"].append(logo)
-    grid.addWidget(widgets["logo"][-1], 0, 0)
-    widgets["message"].append(mensaje)
-    grid.addWidget(widgets["message"][-1], 1, 0)    
 
 def show_frame_espera():
     """
@@ -266,8 +247,7 @@ def show_frame_espera():
     global salida
     n=0
     while(True):
-        clear_widgets()
-        frame_espera1()
+        frame_espera(1, msg="El robot está trayendo su pedido.")
         
         # Condición de salida - Comunicación con ARDUINO
         salida = arduino.readline().decode() == "retirar\n"
@@ -275,8 +255,7 @@ def show_frame_espera():
             break
         
         QtTest.QTest.qWait(500)
-        clear_widgets()
-        frame_espera2()
+        frame_espera(2, msg="El robot está trayendo su pedido.")
         
         # Condición de salida - Comunicación con ARDUINO
         salida = arduino.readline().decode() == "retirar\n"
@@ -322,56 +301,58 @@ def frame_listar():
     grid.addWidget(widgets["button"][-1], 2, 1)
     
 
-def frame_espera3():
+def frame_espera(logo_espera, msg):
+    clear_widgets() # primero se limpia
     #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap(f"{root_path}/img/3.png")
+    image = QPixmap(f"{root_path}/img/{logo_espera}.png")
     logo = QLabel()
     logo.setPixmap(image)
     logo.setAlignment(QtCore.Qt.AlignCenter)
     logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
     
-    mensaje = crear_mensaje("Mecabot está ocupado, por favor espere.")
+    mensaje = crear_mensaje(msg)
     
     widgets["logo"].append(logo)
     grid.addWidget(widgets["logo"][-1], 0, 0)
     widgets["message"].append(mensaje)
     grid.addWidget(widgets["message"][-1], 1, 0)
 
-def frame_espera4():
-    #accion es un booleano que especifica si va a esperar o no
-    image = QPixmap(f"{root_path}/img/4.png")
-    logo = QLabel()
-    logo.setPixmap(image)
-    logo.setAlignment(QtCore.Qt.AlignCenter)
-    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+def deteccion_qr(url2, bandera_qr):
+    global arduino
     
-    mensaje = crear_mensaje("Mecabot está ocupado, por favor espere.")
-    
-    widgets["logo"].append(logo)
-    grid.addWidget(widgets["logo"][-1], 0, 0)
-    widgets["message"].append(mensaje)
-    grid.addWidget(widgets["message"][-1], 1, 0)    
+    # Detección QR
+    imgResp = urllib.request.urlopen(url2)
+    imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
+    img = cv2.imdecode(imgNp, -1)
+    qr = getQRS(img)
+    first_qr = qr[0] if qr else {} # se asume solo un QR en la imagen
+
+    if qr and bandera_qr:
+        bandera_qr = 0
+        ID = first_qr.split(":")[0]
+        medicamento_detectado = data_handler.save_box(ID) # ATENCION si es None
+        if medicamento_detectado is not None:
+            print(qr)
+
+        arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
+
+    QtTest.QTest.qWait(100) # OJO
+    data = arduino.readline().decode()
+    return bandera_qr, data
 
 def show_frame_espera_2():
-    global salida, arduino
-    n=0
+    bandera_qr = 1
     while(True):
-        clear_widgets()
-        frame_espera3()
-        QtTest.QTest.qWait(100)
-        clear_widgets()
-        data = arduino.readline().decode()
-        frame_espera4()
-        QtTest.QTest.qWait(100)
-        salida = n>4
-        n+=1
-
-        # Comunicación con ARDUINO
-        data = arduino.readline().decode()
+        frame_espera(3, msg="Mecabot está ocupado, por favor espere.")
+        bandera_qr, data = deteccion_qr(url_repo, bandera_qr)
         print(data)
+
+        frame_espera(4, msg="Mecabot está ocupado, por favor espere.")
+        bandera_qr, data = deteccion_qr(url_repo, bandera_qr)
+        print(data)
+
         # Condición de salir del frame de espera
-        if data == "desocupado\n":
-            break
+        if data == "desocupado\n": break
     start_program()
     
     
