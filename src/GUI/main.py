@@ -179,8 +179,7 @@ def frame_QR():
                 medicamento_detectado = data_handler.search_box(ID) # ATENCION si es None
                 if medicamento_detectado is not None:
                     frame_sin_medicamento()
-                    next
-                arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
+                    arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
                 break
             else: continue
     show_frame_espera()
@@ -332,9 +331,8 @@ def deteccion_qr(url2, bandera_qr):
         ID = first_qr.split(":")[0]
         medicamento_detectado = data_handler.save_box(ID) # ATENCION si es None
         if medicamento_detectado is not None:
-            print(qr)
-
-        arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
+            print(qr) # reemplazar
+            arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
 
     QtTest.QTest.qWait(100) # OJO
     data = arduino.readline().decode()
