@@ -1,6 +1,0 @@
-README.md
-setup.py
-mecabot.egg-info/PKG-INFO
-mecabot.egg-info/SOURCES.txt
-mecabot.egg-info/dependency_links.txt
-mecabot.egg-info/top_level.txt
