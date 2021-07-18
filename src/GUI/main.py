@@ -124,6 +124,55 @@ def alerta(medicamento):
     return retval
 
 
+def frame_home():
+    """
+    Frame de pantalla principal
+
+    Aparece el logo y dos botones:
+        --------------
+        |   MECABOT  |
+        --------------
+        -Escanear código QR
+        -Listar los medicamentos disponibles
+    """
+    global ocupado, arduino, bandera
+    bandera = False
+    clear_widgets()
+    #display Logo
+    image = QPixmap(f"{root_path}/img/logo.png")
+    logo = QLabel()
+    logo.setPixmap(image)
+    logo.setAlignment(QtCore.Qt.AlignCenter)
+    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+    widgets["logo"].append(logo)
+
+    #button widget
+    button1 = createButton("Escanear código QR")
+    button2 = createButton("Listar los medicamentos disponibles")
+    button1.clicked.connect(frame_QR)
+    button2.clicked.connect(show_frame_listar)
+
+    widgets["button"].append(button1)
+
+    grid.addWidget(widgets["logo"][-1], 0, 0)
+    grid.addWidget(widgets["button"][-1], 1, 0)
+    widgets["button"].append(button2)
+    grid.addWidget(widgets["button"][-1], 2, 0)
+
+    # Verifica si se apretó el botón de reposición - Comunicación con ARDUINO
+    while True:
+        data = arduino.readline().decode()
+
+        if bandera:
+            break
+        print(data)
+        if data == "ocupado\n":
+            break
+        QtTest.QTest.qWait(500)
+    if data == "ocupado\n":
+        frame_reposicion()
+
+
 def frame_QR():
     """
         Muestra la cámara en la pantalla principal para que la persona pueda poner
@@ -131,7 +180,7 @@ def frame_QR():
         un mensaje emergente que debe de aceptar para que se busque el medicamento
         indicado.
         
-        Puede ser llamado a través del frame1 (pantalla principal) y luego va al
+        Puede ser llamado a través del frame_home (pantalla principal) y luego va al
         frame de espera o al frame principal con el botón volver.
         
         Al detectar el medicamento envía un mensaje al arduino con la ubicación del
@@ -164,7 +213,7 @@ def frame_QR():
         widgets["qrshow"].append(qrshow)
         grid.addWidget(widgets["qrshow"][-1], 1, 0)
         button1 = createButton("Volver")
-        button1.clicked.connect(frame1)
+        button1.clicked.connect(frame_home)
         QtTest.QTest.qWait(50)
         
         # Comunicación con ARDUINO
@@ -182,58 +231,10 @@ def frame_QR():
                     arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
                 break
             else: continue
-    show_frame_espera()
+    frame_despacho()
 
 
-def frame1():
-    """
-    Frame de pantalla principal
-
-    Aparece el logo y dos botones:
-        --------------
-        |   MECABOT  |
-        --------------
-        -Escanear código QR
-        -Listar los medicamentos disponibles
-    """
-    global ocupado, arduino, bandera
-    bandera = False
-    clear_widgets()
-    #display Logo
-    image = QPixmap(f"{root_path}/img/logo.png")
-    logo = QLabel()
-    logo.setPixmap(image)
-    logo.setAlignment(QtCore.Qt.AlignCenter)
-    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
-    widgets["logo"].append(logo)
-    
-    #button widget
-    button1 = createButton("Escanear código QR")
-    button2 = createButton("Listar los medicamentos disponibles")
-    button1.clicked.connect(frame_QR)
-    button2.clicked.connect(show_frame_listar)
-    
-    widgets["button"].append(button1)
-
-    grid.addWidget(widgets["logo"][-1], 0, 0)
-    grid.addWidget(widgets["button"][-1], 1, 0)
-    widgets["button"].append(button2)
-    grid.addWidget(widgets["button"][-1], 2, 0)
-    
-    # Verifica si se apretó el botón de reposición - Comunicación con ARDUINO
-    while True:
-        data = arduino.readline().decode()
-        
-        if bandera:
-            break
-        print(data)
-        if data == "ocupado\n":
-            break
-        QtTest.QTest.qWait(500)
-    if data == "ocupado\n":
-        show_frame_espera_2()
-
-def show_frame_espera():
+def frame_despacho():
     """
         Este frame se encarga de mostrar la animación de espera
         mientras el robot trae el medicamento.
@@ -338,7 +339,7 @@ def deteccion_qr(url2, bandera_qr):
     data = arduino.readline().decode()
     return bandera_qr, data
 
-def show_frame_espera_2():
+def frame_reposicion():
     bandera_qr = 1
     while(True):
         frame_espera(3, msg="Mecabot está ocupado, por favor espere.")
@@ -398,7 +399,7 @@ def frame_sin_medicamento():
 
 def start_program():
     clear_widgets()
-    frame1()
+    frame_home()
 
 
 def frame_base():
