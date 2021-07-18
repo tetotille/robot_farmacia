@@ -65,3 +65,20 @@ def search_box(ID):
     except KeyError:
         print(f"El medicamento de ID {ID} no está en el rack.")
         return None
+
+def list_racks():
+    """
+    Retorna lista de medicamentos disponibles
+
+    Salida
+    -------------
+    Lista de listas de la forma [ID, medicamento, cantidad] que
+    representa los medicamentos disponibles en el rack.
+    Los valores duplicados son eliminados, ya que solo se puede
+    transportar una caja a la vez.
+    """
+    lista = pandas.read_csv(f"{root_path}/lista.csv", index_col = 0)
+    rack = pandas.read_csv(f"{root_path}/rack.csv", index_col = 0)
+    meds = pandas.merge(lista,rack,left_index=True, right_index=True)[
+                        ["medicamento","cantidad"]].drop_duplicates()
+    return meds.reset_index().values.tolist()

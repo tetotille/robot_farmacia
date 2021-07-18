@@ -43,8 +43,6 @@ url = "http://192.168.100.43:8080/shot.jpg"
 # URL DE LA SEGUNDA CAMARA: camara de reposición
 url_repo = "http://192.168.400.3:8080/shot.jpg"
 
-#lista_medicamentos: la lista de todos los medicamentos disponibles
-
 ocupado = False
 bandera = False
 
@@ -139,7 +137,7 @@ def frame_QR():
 
         El QR tiene como formato: ID:medicamento:cantidad
     """
-    global url,bandera,arduino,lista_medicamentos
+    global url,bandera,arduino
     bandera = True
     while True:
         # Se hace la detección del código QR y se guarda en qr
@@ -272,13 +270,14 @@ def show_frame_listar():
 
 def frame_listar():
     
-    global lista_medicamentos, bandera
+    global bandera
     bandera = True
     
     mensaje = crear_mensaje("Aquí se muestran todos los medicamentos disponibles")
     
+    lista_medicamentos = data_handler.list_racks()
     lista = QListWidget()
-    [lista.addItem(QListWidgetItem(str(medicamento))) for medicamento in lista_medicamentos]
+    [lista.addItem(QListWidgetItem(medicamento[1])) for medicamento in lista_medicamentos]
     lista.setStyleSheet(
         '''
         font-size: 16px;
