@@ -217,7 +217,7 @@ def frame_QR():
         # Comunicación con ARDUINO
         # Condición de medicamento detectado, se retira el medicamento que se encontró en el QR
         if qr != []:
-            if alerta(first_qr['text'])==1024:
+            if alerta(first_qr.split(":")[1])==1024:
                 # una vez que se encuentra el medicamento se debe de decir el lugar donde está
                 # y mandar eso al arduino
                 ID = first_qr.split(":")[0]

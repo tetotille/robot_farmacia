@@ -137,20 +137,20 @@ void loop() {
                 motor_y = -255;
         }
         motor_y = 0;
-        
+
         // Se empuja el medicamento para que caiga
         empujar_hasta_que_caiga();
-        
+
         // 5. Se vuelve a la posición inicial
         posicion_final = lista_posiciones[16];
-        
+
         //motor_z se mueve primero
         while (posi_z > posicion_final[2]){
                 motor_z = -255;
-                
+
         }
         motor_z = 0;
-        
+
         //motor_x se mueve segundo
         while (posi_x > posicion_final[0]){
                 motor_x = -255;
@@ -166,10 +166,12 @@ void loop() {
 
     // Reposición de medicamentos
     // 1. Primero se verifica si se presionó el botón
+    // Si se presionó el botón se debe avisar al python que tiene que esperar
     if (digitalRead(pushButton) == HIGH){
+        Serial.write("ocupado\n");
         digitalWrite(LED_rojo, HIGH);
         digitalWrite(LED_verde, LOW);
-        
+
         // 2. Se empieza a mover la cinta y se verifica si llegó al punto de escaneo
         // El mensaje de escaneo es "escaneo"
         int bandera_scan = 0;
@@ -195,7 +197,6 @@ void loop() {
             if (current_time < 100 && current_time > 4){
                 break;
             }
-
         }
         
         // 3. El robot lleva el medicamento donde debe ser
