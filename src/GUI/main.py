@@ -37,7 +37,7 @@ root_path = "./src/GUI"
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA: camara de pedidos
-url = "http://192.168.1.101:8080/shot.jpg"
+url = "http://192.168.100.65:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
 url_repo = "http://192.168.100.65:8080/shot.jpg"
@@ -162,11 +162,12 @@ def frame_home():
 
         if bandera:
             break
-        print(data)
-        if data == "ocupado\n":
+        print(ascii(data))
+        if data == "ocupado\r\n":
             break
         QtTest.QTest.qWait(500)
-    if data == "ocupado\n":
+    if data == "ocupado\r\n":
+        print("Intentó ir al frame reposición")
         frame_reposicion()
 
 
@@ -223,11 +224,12 @@ def frame_QR():
                 # buscar_medicamento le tiene que dar la posición del rack por ahí que estaría
                 # enumerado del 0 al 15
                 medicamento_detectado = data_handler.search_box(ID) # ATENCION si es None
-                if medicamento_detectado is not None:
+                if medicamento_detectado is None:
                     frame_sin_medicamento()
-                    arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
+                arduino.write((medicamento_detectado+"\n").encode('UTF-8'))
                 break
-            else: continue
+            else: 
+                continue
     frame_despacho()
 
 
@@ -247,7 +249,7 @@ def frame_despacho():
         frame_espera(1, msg="El robot está trayendo su pedido.")
         
         # Condición de salida - Comunicación con ARDUINO
-        salida = arduino.readline().decode() == "retirar\n"
+        salida = arduino.readline().decode() == "retirar\r\n"
         if salida == True:
             break
         
@@ -255,7 +257,7 @@ def frame_despacho():
         frame_espera(2, msg="El robot está trayendo su pedido.")
         
         # Condición de salida - Comunicación con ARDUINO
-        salida = arduino.readline().decode() == "retirar\n"
+        salida = arduino.readline().decode() == "retirar\r\n"
         if salida == True:
             break
         
@@ -314,6 +316,7 @@ def frame_espera(logo_espera, msg):
     grid.addWidget(widgets["logo"][-1], 0, 0)
     widgets["message"].append(mensaje)
     grid.addWidget(widgets["message"][-1], 1, 0)
+    
 
 def deteccion_qr(url2, bandera_qr):
     global arduino
@@ -323,15 +326,15 @@ def deteccion_qr(url2, bandera_qr):
     imgNp = np.array(bytearray(imgResp.read()), dtype=np.uint8)
     img = cv2.imdecode(imgNp, -1)
     qr = getQRS(img)
-    first_qr = qr[0] if qr else {} # se asume solo un QR en la imagen
+    first_qr = qr[0]["text"] if qr else {} # se asume solo un QR en la imagen
 
-    if qr and bandera_qr:
+    if first_qr and bandera_qr:
         bandera_qr = 0
         ID = first_qr.split(":")[0]
         medicamento_detectado = data_handler.save_box(ID) # ATENCION si es None
         if medicamento_detectado is not None:
             print(qr) # reemplazar
-            arduino.write(encode(medicamento_detectado+"\n", 'UTF-8'))
+            arduino.write((medicamento_detectado+"\n").encode('UTF-8'))
 
     QtTest.QTest.qWait(100) # OJO
     data = arduino.readline().decode()
@@ -349,7 +352,11 @@ def frame_reposicion():
         print(data)
 
         # Condición de salir del frame de espera
-        if data == "desocupado\n": break
+        if data == "desocupado\r\n": 
+            print("aper")
+            break
+        else:
+            print("ascii", ascii(data))
     start_program()
     
     
@@ -371,7 +378,10 @@ def frame_retirar():
     grid.addWidget(widgets["logo"][-1], 0, 0)
     widgets["message"].append(mensaje)
     grid.addWidget(widgets["message"][-1], 1, 0)
-    QtTest.QTest.qWait(4000)
+    while True:
+        data = arduino.readline().decode()
+        if data=="home\r\n":
+            break
     start_program()
 
 

@@ -61,7 +61,7 @@ def search_box(ID):
         print(f"Medicamento de ID {ID} no registrado.")
         return None
     try:
-        x,y = rack.loc[ID].iloc[0].tolist()
+        x,y = rack.loc[ID].tolist() if isinstance(rack.loc[ID],pandas.Series) else rack.loc[ID].iloc[0].tolist()
         rack[(rack.pos_x != x) | (rack.pos_y != y)].to_csv(f"{root_path}/rack.csv")
         return str(x*4+y)
     except KeyError:
