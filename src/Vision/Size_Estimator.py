@@ -8,8 +8,8 @@ x=9.6 # largo de la caja patrón
 y=5.2 # ancho de la caja patrón
 dim1 = x/275.0727176584403 # centímetros por pixel
 dim2 = y/136.4734406395618 # centímetros por pixel
-start_bound = [244, 88]
-end_bound = [580, 400]
+start_bound = (244, 88)
+end_bound = (580, 400)
 
 def getPosNorm(img):
     result, pts= [], []
@@ -20,6 +20,7 @@ def getPosNorm(img):
             Cy += point.y
         pts=np.array([[point.x, point.y] for point in QR['polygon']], np.int32).reshape((-1, 1, 2)) if QR['polygon'] else []
         Cx/=4; Cy/=4 # se obtiene el centroide absoluto en la imagen
+        result.append(QR["text"])
     return result, pts
 
 def getContour(img):
@@ -68,18 +69,26 @@ def getContour(img):
     width = min(distances)*dim2
     length = max(distances)*dim1
     print(width, length)
-    return image_copy
+    return image_copy, width, length
 
 last_known_position=np.array([], np.int32)
 while True:
-    url = "http://192.168.100.75:8080/shot.jpg"
+    url = "http://192.168.205.37:8080/shot.jpg"
     imgResp=urllib.request.urlopen(url) 
     imgNp=np.array(bytearray(imgResp.read()),dtype=np.uint8)
     img=cv2.imdecode(imgNp,-1)
     img=cv2.resize(img, (720, 480), interpolation = cv2.INTER_AREA)
-    img= getContour(img)
-    img= cv2.rectangle(img, start_bound, end_bound, (0, 255, 0), 2)
+    img, width, length = getContour(img)
+    img= cv2.rectangle(img, start_bound, end_bound, color = (0, 255, 0), thickness=2)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(img,f'largo: {round(length,1)}cm',(10,end_bound[1]), font, 1,(255,0,255),2,cv2.LINE_AA)
+    cv2.putText(img,f'ancho: {round(width,1)}cm',(10,end_bound[1]+50), font, 1,(255,0,255),2,cv2.LINE_AA)
     result, pts= getPosNorm(img)
+    ID, medicamento, cantidad = result[0].split(":") if result else [""]*3
+    cv2.putText(img,f'ID: {ID}',(10,start_bound[1]-50), font, 1,(255,0,255),2,cv2.LINE_AA)
+    cv2.putText(img,f'medicamento: {medicamento}',(10,start_bound[1]), font, 1,(255,0,255),2,cv2.LINE_AA)
+    cv2.putText(img,f'cantidad: {cantidad}',(10,start_bound[1]+50), font, 1,(255,0,255),2,cv2.LINE_AA)
+    print(result)
     if len(pts): last_known_position = pts
     cv2.imshow('test',img)
     if ord('q')==cv2.waitKey(10):
