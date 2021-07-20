@@ -17,6 +17,7 @@ def save_box(ID):
     guarda el medicamento. None si no hay lugares
     libres o no se encuentra registrado el medicamento.
     """
+    ID = int(ID)
     rack = pandas.read_csv(f"{root_path}/rack.csv", index_col = 0)
     lista = pandas.read_csv(f"{root_path}/lista.csv", index_col = 0)
     try:
@@ -29,7 +30,7 @@ def save_box(ID):
             if [x,y] not in busy]
     try:
         choice = random.choice(free)
-        rack = rack.append(pandas.Series(name = 7,
+        rack = rack.append(pandas.Series(name = ID,
                                          index = ["pos_x", "pos_y"],
                                          data = choice))
         rack.to_csv(f"{root_path}/rack.csv")
@@ -53,6 +54,7 @@ def search_box(ID):
     encuentra el medicamento. None si no se encuentra
     el medicamento o el mismo no existe.
     """
+    ID = int(ID)
     lista = pandas.read_csv(f"{root_path}/lista.csv", index_col = 0)
     rack = pandas.read_csv(f"{root_path}/rack.csv", index_col = 0)
     if ID not in lista.index:
