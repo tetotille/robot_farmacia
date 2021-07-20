@@ -60,7 +60,7 @@ def search_box(ID):
         return None
     try:
         x,y = rack.loc[ID].iloc[0].tolist()
-        rack[(rack.pos_x != x) | (rack.pos_y != y)]
+        rack[(rack.pos_x != x) | (rack.pos_y != y)].to_csv(f"{root_path}/rack.csv")
         return str(x*4+y)
     except KeyError:
         print(f"El medicamento de ID {ID} no está en el rack.")
