@@ -5,7 +5,6 @@ import urllib.request
 import cv2
 import numpy as np
 from pyzbar import pyzbar
-from data import *
 
 
 from PyQt5.QtWidgets import (
@@ -38,7 +37,7 @@ root_path = "./src/GUI"
 arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA: camara de pedidos
-url = "http://192.168.100.43:8080/shot.jpg"
+url = "http://192.168.1.101:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
 url_repo = "http://192.168.400.3:8080/shot.jpg"
@@ -217,10 +216,10 @@ def frame_QR():
         # Comunicación con ARDUINO
         # Condición de medicamento detectado, se retira el medicamento que se encontró en el QR
         if qr != []:
-            if alerta(first_qr['text'])==1024:
+            if alerta(first_qr["text"].split(":")[1])==1024:
                 # una vez que se encuentra el medicamento se debe de decir el lugar donde está
                 # y mandar eso al arduino
-                ID = first_qr.split(":")[0]
+                ID = first_qr["text"].split(":")[0]
                 # buscar_medicamento le tiene que dar la posición del rack por ahí que estaría
                 # enumerado del 0 al 15
                 medicamento_detectado = data_handler.search_box(ID) # ATENCION si es None
