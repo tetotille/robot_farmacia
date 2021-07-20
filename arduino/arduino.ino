@@ -1,6 +1,6 @@
-#include <ctime>
 #include <AccelStepper.h>
 #include <SoftwareSerial.h>
+#include <Servo.h>
 
 #define X_STEP_PIN         54
 #define X_DIR_PIN          55
@@ -22,15 +22,19 @@
 
 #define servopin            1
 
-#define motor1pin1          5
-#define motor1pin2          6
-#define ENA                 4
+//#define motor1pin1          5
+//#define motor1pin2          6
+//#define ENA                 4
 
 #define LED_rojo           50
 #define LED_verde          52
 #define pushbutton         A11
 
 //boolean x_done, y_done, z_done, done;
+
+int motor1pin1 = 5;
+int motor1pin2 = 6;
+int ENA =       4;
 
 AccelStepper stepperX = AccelStepper(1, X_STEP_PIN, X_DIR_PIN);
 AccelStepper stepperY = AccelStepper(1, Y_STEP_PIN, Y_DIR_PIN);
@@ -46,12 +50,13 @@ Servo myservo;
 String x;
 int estado = 0;
 int marcaEstado = 0;
-float dz = 4000;
+int done = 0;
+double dz = 4000;
 
-int vel_cinta = 110;
+int vel_cinta = 100;
 char uart_python[10];
 
-char posicion[10];
+String posicion;
 int fila, columna;
 
 // La lista de posiciones se hace de tal forma que se ubica la posicion final
@@ -60,26 +65,26 @@ int fila, columna;
 // lugar 16 es la posicion inicial
 // lugar 17 es la posicion de entrega de medicamentos
 // lugar 18 es la posicion de la cinta
-float lista_posiciones[19][3] = { { -2040, 1500, 38500},// 0
-                            { -1485, 1150, 38500},// 1
-                            { -895, 1150, 38500},// 2
-                            { -310, 1150, 38500},// 3
-                            { -2040, 1150, 27200},// 4
-                            { -1485, 1150, 27200},// 5
-                            { -895, 1150, 27200},// 6
-                            { -310, 1150, 27200},// 7
-                            { -2040, 1150, 15400},// 8
-                            { -1485, 1150, 15400},// 9
-                            { -895, 1150, 15400},// 10
-                            { -310, 1150, 15400},// 11
-                            { -2040, 1150, 3600},// 12
-                            { -1485, 1150, 3600},// 13
-                            { -895, 1150, 3600},// 14
-                            { -310, 1150, 3600},// 15
+double lista_posiciones[19][3] = { { -310, 1100, 3600},// 0
+                            { -895, 1100, 3600},// 1
+                            { -1485, 1100, 3600},// 2
+                            { -2040, 1100, 3600},// 3
+                            { -310, 1100, 15400},// 4
+                            { -895, 1100, 15400},// 5
+                            { -1485, 1100, 15400},// 6
+                            { -2040, 1100, 15400},// 7
+                            { -310, 1100, 27200},// 8
+                            { -895, 1100, 27200},// 9
+                            { -1485, 1100, 27200},// 10
+                            { -2040, 1100, 27200},// 11
+                            { -310, 1100, 38500},// 12
+                            { -895, 1100, 38500},// 13
+                            { -1485, 1100, 38500},// 14
+                            { -2040, 1100, 38500},// 15
                             { 0, 0, 0},// 16 //final de carrera minimo
                             { 0, 0, 0},// 17 //final de carrera minimo
                             { 0, 0, 0} };// 18 //final de carrera maximo
-int posicion_final[3];
+double posicion_final[3];
 
 
 void entregarRemedio(){
@@ -187,20 +192,18 @@ void mover_cinta(){
    digitalWrite(motor1pin1, LOW);
    digitalWrite(motor1pin2, HIGH);
 
-   analogWrite(ENA, vel_cint); 
-   delay(5000);
+   analogWrite(ENA, vel_cinta); 
+   delay(7000);
    
     digitalWrite(motor1pin1, LOW);
    digitalWrite(motor1pin2, LOW);
   }
 
 
-int integerButton(button){
+int integerButton(int val){
   int bandera;
-  val = analogRead(button);
-  percent = map(val, 0, 1023, 0, 100);
-
-  if (percent > 90){
+  //int percent = map(val, 0, 1023, 0, 100);
+  if (val > 900){
     bandera = 1;
     return bandera;
   }
@@ -254,17 +257,19 @@ void setup() {
 void loop() {
     // Despacho de Medicamento///////////////////////////////////////////
     // 1. Primero debe verificar si hay pedidos
-    posicion = Serial.read();
+    posicion = Serial.readString();
     digitalWrite(LED_rojo, LOW);
     digitalWrite(LED_verde, HIGH);
-
+    
     homeStepper();
     
-    if (posicion){
+    if (posicion!=""){
         digitalWrite(LED_rojo, HIGH);
         digitalWrite(LED_verde, LOW);
-        
-        posicion_final = lista_posiciones[posicion][:];
+
+        posicion_final[0] = lista_posiciones[posicion.toInt()][0];
+        posicion_final[1] = lista_posiciones[posicion.toInt()][1];
+        posicion_final[2] = lista_posiciones[posicion.toInt()][2];
         
         // 2. Se mueven los motores de a 1 para no forzarle demasiado al sistema
   
@@ -288,14 +293,19 @@ void loop() {
 
     // Reposición de medicamentos////////////////////////////////////////////////
     // 1. Primero se verifica si se presionó el botón
-    boton = int integerButton(pushButton)
+     int value = analogRead(pushbutton);
+    int boton = integerButton(value);
     if (boton == HIGH){
         digitalWrite(LED_rojo, HIGH);
         digitalWrite(LED_verde, LOW);
-        cinta();
+        mover_cinta();
+
+        posicion =Serial.readString();
         
         // 2. El robot lleva el medicamento donde debe ser
-        posicion_final = lista_posiciones[posicion][:];
+        posicion_final[0] = lista_posiciones[posicion.toInt()][0];
+        posicion_final[1] = lista_posiciones[posicion.toInt()][1];
+        posicion_final[2] = lista_posiciones[posicion.toInt()][2];
   
          moveStepper(0, posicion_final[0], -350); // 0 is stepperX
          delay(500);

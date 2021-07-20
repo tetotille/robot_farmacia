@@ -34,13 +34,13 @@ import serial
 root_path = "./src/GUI"
 
 # Dirección del ARDUINO
-arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA: camara de pedidos
 url = "http://192.168.1.101:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
-url_repo = "http://192.168.400.3:8080/shot.jpg"
+url_repo = "http://192.168.100.65:8080/shot.jpg"
 
 ocupado = False
 bandera = False
