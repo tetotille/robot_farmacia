@@ -20,7 +20,7 @@
 #define Z_MIN_PIN          18
 #define Z_MAX_PIN          19
 
-#define servopin            1
+#define servopin            44
 
 //#define motor1pin1          5
 //#define motor1pin2          6
@@ -53,7 +53,8 @@ int marcaEstado = 0;
 int done = 0;
 double dz = 4000;
 
-int vel_cinta = 100;
+int tiempo_cinta=15000;
+int vel_cinta = 94;
 char uart_python[10];
 
 String posicion;
@@ -71,7 +72,7 @@ double lista_posiciones[19][3] = { { -310, 1100, 3600},// 0
                             { -2040, 1100, 3600},// 3
                             { -310, 1100, 15400},// 4
                             { -895, 1100, 15400},// 5
-                            { -1485, 1100, 15400},// 6
+                            { -1485, 1100, 15400},// 6  
                             { -2040, 1100, 15400},// 7
                             { -310, 1100, 27200},// 8
                             { -895, 1100, 27200},// 9
@@ -87,37 +88,61 @@ double lista_posiciones[19][3] = { { -310, 1100, 3600},// 0
 double posicion_final[3];
 
 
+void moveStepper (int i, double cant, int vel){
+   done = 0 ;
+   
+  stepper[i].moveTo(cant);
+  while ( done == 0) {
+    if(digitalRead(MAX_Switch[i]) == LOW){
+      stepper[i].stop();
+      done = 1;
+    }
+    else if (stepper[i].distanceToGo() != 0){
+      stepper[i].setSpeed(vel);
+      stepper[i].run();
+    }
+    else 
+      done = 1;
+  }
+}
+
 void entregarRemedio(){
-    done = 0;
-    stepper[0].moveTo(-4000);
+  //Y
+     done = 0;
+    stepper[1].moveTo(-2000);
     while ( done == 0) {
-      if(digitalRead(MAX_Switch[0]) == LOW){
-        stepper[0].stop();
+      if(digitalRead(MIN_Switch[1]) == LOW){
+        stepper[1].stop();
+        stepper[1].setCurrentPosition(0);
         done = 1;
       }
-      else if (stepper[0].distanceToGo() != 0){
-        stepper[0].setSpeed(-250);
-        stepper[0].run();
+      else if (stepper[1].distanceToGo() != 0){
+        stepper[1].setSpeed(-250);
+        stepper[1].run();
       }
       else 
         done = 1;
     }
-
+  delay(500);
+  moveStepper(0, -4000, -250); // 0 is stepperX
+  delay(1000);
+  
     // mover servo
     int posServo = 0;
-    for (posServo = 0; posServo <= 180; posServo += 1) { // goes from 0 degrees to 180 degrees
+    for (posServo = 0; posServo <= 180; posServo += 3) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
       myservo.write(posServo);              // tell servo to go to position in variable 'pos'
-      delay(500);                       // waits 15ms for the servo to reach the position
+      delay(15);                       // waits 15ms for the servo to reach the position
     }
-    for (posServo = 180; posServo >= 0; posServo -= 1) { // goes from 180 degrees to 0 degrees
+    for (posServo = 180; posServo >= 0; posServo -= 3) { // goes from 180 degrees to 0 degrees
       myservo.write(posServo);              // tell servo to go to position in variable 'pos'
-      delay(500);                       // waits 15ms for the servo to reach the position
+      delay(15);                       // waits 15ms for the servo to reach the position
   }
+  delay(1000);
 }
 
 void homeStepper (){
-      //Y
+     //Y
      done = 0;
     stepper[1].moveTo(-2000);
     while ( done == 0) {
@@ -170,30 +195,12 @@ void homeStepper (){
 }
 
 
-void moveStepper (int i, double cant, int vel){
-   done = 0 ;
-   
-  stepper[i].moveTo(cant);
-  while ( done == 0) {
-    if(digitalRead(MAX_Switch[i]) == LOW){
-      stepper[i].stop();
-      done = 1;
-    }
-    else if (stepper[i].distanceToGo() != 0){
-      stepper[i].setSpeed(vel);
-      stepper[i].run();
-    }
-    else 
-      done = 1;
-  }
-}
-
 void mover_cinta(){
    digitalWrite(motor1pin1, LOW);
    digitalWrite(motor1pin2, HIGH);
 
    analogWrite(ENA, vel_cinta); 
-   delay(7000);
+   delay(tiempo_cinta);
    
     digitalWrite(motor1pin1, LOW);
    digitalWrite(motor1pin2, LOW);
@@ -250,6 +257,10 @@ void setup() {
     pinMode(ENA,OUTPUT);
     pinMode(motor1pin1, OUTPUT);
     pinMode(motor1pin2, OUTPUT);
+
+    myservo.attach(servopin);
+    myservo.write(0);              // tell servo to go to position in variable 'pos'
+    delay(500);   
 }
 
 
@@ -286,9 +297,12 @@ void loop() {
         
         // 4. Lleva el medicamento en la posicion de entrega de medicamentos
         entregarRemedio();
+        Serial.println("retirar");
          
         // 5. Se vuelve a la posición inicial
         homeStepper();
+        Serial.println("home");
+        
     }
 
     // Reposición de medicamentos////////////////////////////////////////////////
@@ -296,6 +310,7 @@ void loop() {
      int value = analogRead(pushbutton);
     int boton = integerButton(value);
     if (boton == HIGH){
+      Serial.println("ocupado");
         digitalWrite(LED_rojo, HIGH);
         digitalWrite(LED_verde, LOW);
         mover_cinta();
@@ -317,6 +332,6 @@ void loop() {
 
        // 3. Se vuelve a la posición inicial
         homeStepper();
-        
+        Serial.println("desocupado");
     }
 }

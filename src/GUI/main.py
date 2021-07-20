@@ -34,10 +34,10 @@ import serial
 root_path = "./src/GUI"
 
 # Dirección del ARDUINO
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.2)
+arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA: camara de pedidos
-url = "http://192.168.100.65:8080/shot.jpg"
+url = "http://192.168.100.41:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
 url_repo = "http://192.168.100.65:8080/shot.jpg"
@@ -250,6 +250,7 @@ def frame_despacho():
         
         # Condición de salida - Comunicación con ARDUINO
         salida = arduino.readline().decode() == "retirar\r\n"
+        print(salida)
         if salida == True:
             break
         
@@ -258,6 +259,7 @@ def frame_despacho():
         
         # Condición de salida - Comunicación con ARDUINO
         salida = arduino.readline().decode() == "retirar\r\n"
+        print(salida)
         if salida == True:
             break
         
@@ -366,20 +368,23 @@ def frame_retirar():
         llega a la caja de donde se puede agarrar, el mensaje dura 4 segundos
         y luego vuelve a la pantalla principal.
     """
-    image = QPixmap(f"{root_path}/img/fin.png")
-    logo = QLabel()
-    logo.setPixmap(image)
-    logo.setAlignment(QtCore.Qt.AlignCenter)
-    logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
-    
-    mensaje = crear_mensaje("Por favor retire su medicamento.")
-    
-    widgets["logo"].append(logo)
-    grid.addWidget(widgets["logo"][-1], 0, 0)
-    widgets["message"].append(mensaje)
-    grid.addWidget(widgets["message"][-1], 1, 0)
+    clear_widgets()
     while True:
+        image = QPixmap(f"{root_path}/img/fin.png")
+        logo = QLabel()
+        logo.setPixmap(image)
+        logo.setAlignment(QtCore.Qt.AlignCenter)
+        logo.setStyleSheet("margin-top:50px; margin-bottom:50px")
+        
+        mensaje = crear_mensaje("Por favor retire su medicamento.")
+        
+        widgets["logo"].append(logo)
+        grid.addWidget(widgets["logo"][-1], 0, 0)
+        widgets["message"].append(mensaje)
+        grid.addWidget(widgets["message"][-1], 1, 0)
+        
         data = arduino.readline().decode()
+        print(ascii(data))
         if data=="home\r\n":
             break
     start_program()
@@ -390,6 +395,7 @@ def frame_sin_medicamento():
         Imprime un mensaje en pantalla que no se encuentra el medicamento,
         el mensaje dura 4 segundos y luego vuelve a la pantalla principal.
     """
+    clear_widgets()
     image = QPixmap(f"{root_path}/img/not_found.png")
     logo = QLabel()
     logo.setPixmap(image)
