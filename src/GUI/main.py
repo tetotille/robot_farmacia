@@ -37,10 +37,10 @@ root_path = "./src/GUI"
 arduino = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=.2)
 
 # URL DE LA PRIMERA CAMARA: camara de pedidos
-url = "http://192.168.100.41:8080/shot.jpg"
+url = "http://192.168.205.83:8080/shot.jpg"
 
 # URL DE LA SEGUNDA CAMARA: camara de reposición
-url_repo = "http://192.168.100.65:8080/shot.jpg"
+url_repo = "http://192.168.205.48:8080/shot.jpg"
 
 ocupado = False
 bandera = False
@@ -224,6 +224,7 @@ def frame_QR():
                 # buscar_medicamento le tiene que dar la posición del rack por ahí que estaría
                 # enumerado del 0 al 15
                 medicamento_detectado = data_handler.search_box(ID) # ATENCION si es None
+                print("se encuentra en", medicamento_detectado)
                 if medicamento_detectado is None:
                     frame_sin_medicamento()
                 arduino.write((medicamento_detectado+"\n").encode('UTF-8'))
@@ -329,11 +330,12 @@ def deteccion_qr(url2, bandera_qr):
     img = cv2.imdecode(imgNp, -1)
     qr = getQRS(img)
     first_qr = qr[0]["text"] if qr else {} # se asume solo un QR en la imagen
-
+    print("first_qr es", first_qr)
     if first_qr and bandera_qr:
         bandera_qr = 0
         ID = first_qr.split(":")[0]
         medicamento_detectado = data_handler.save_box(ID) # ATENCION si es None
+        print("se va a guardar en", medicamento_detectado)
         if medicamento_detectado is not None:
             print(qr) # reemplazar
             arduino.write((medicamento_detectado+"\n").encode('UTF-8'))

@@ -3,6 +3,8 @@ import cv2
 import urllib.request
 from src.Vision.QR_reader import getQRS
 from math import sqrt
+import pandas
+root_path = "./src/data"
 
 x=9.6 # largo de la caja patrón
 y=5.2 # ancho de la caja patrón
@@ -73,7 +75,7 @@ def getContour(img):
 
 last_known_position=np.array([], np.int32)
 while True:
-    url = "http://192.168.205.37:8080/shot.jpg"
+    url = "http://192.168.100.3:8080/shot.jpg"
     imgResp=urllib.request.urlopen(url) 
     imgNp=np.array(bytearray(imgResp.read()),dtype=np.uint8)
     img=cv2.imdecode(imgNp,-1)
@@ -92,4 +94,9 @@ while True:
     if len(pts): last_known_position = pts
     cv2.imshow('test',img)
     if ord('q')==cv2.waitKey(10):
+        lista = pandas.read_csv(f"{root_path}/lista.csv", index_col = 0)
+        lista = lista.append(pandas.Series(name = ID,
+                                         index = ["medicamento","cantidad","largo","ancho"],
+                                         data = [medicamento, cantidad, length, width]))
+        lista.to_csv(f"{root_path}/lista.csv")
         break
